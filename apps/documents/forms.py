@@ -2,6 +2,7 @@ import os
 from django import forms
 from .models import Documento, TipoDocumento
 from .validators import validar_archivo_completo
+from .models import Documento, TipoDocumento, DocumentoRequerido
 
 
 class DocumentoUploadForm(forms.ModelForm):
@@ -56,3 +57,22 @@ class DocumentoUploadForm(forms.ModelForm):
                 ).update(esta_vigente=False)
             documento.save()
         return documento
+    
+class TipoDocumentoForm(forms.ModelForm):
+    class Meta:
+        model = TipoDocumento
+        fields = ['nombre', 'descripcion', 'obligatorio', 'orden', 'activo']
+        widgets = {
+            'nombre': forms.TextInput(attrs={'class': 'form-control'}),
+            'descripcion': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'obligatorio': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'orden': forms.NumberInput(attrs={'class': 'form-control'}),
+            'activo': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+        }
+        labels = {
+            'nombre': 'Nombre del documento',
+            'descripcion': 'Descripción / instrucciones',
+            'obligatorio': 'Es obligatorio',
+            'orden': 'Orden de visualización',
+            'activo': 'Activo',
+        }

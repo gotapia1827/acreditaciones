@@ -121,3 +121,26 @@ class Documento(TimeStampedModel):
     @property
     def esta_pendiente(self):
         return self.estado == self.ESTADO_PENDIENTE
+class DocumentoRequerido(TimeStampedModel):
+    """
+    Define qué documentos son requeridos para cada cliente específico.
+    Si no tiene asignaciones propias, se usan los tipos globales activos.
+    """
+    cliente = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='documentos_requeridos'
+    )
+    tipo_documento = models.ForeignKey(
+        TipoDocumento,
+        on_delete=models.CASCADE,
+        related_name='requeridos_para'
+    )
+
+    class Meta:
+        verbose_name = 'Documento requerido'
+        verbose_name_plural = 'Documentos requeridos'
+        unique_together = ['cliente', 'tipo_documento']
+
+    def __str__(self):
+        return f'{self.cliente.get_full_name()} — {self.tipo_documento.nombre}'

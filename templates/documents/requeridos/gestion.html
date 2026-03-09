@@ -1,0 +1,122 @@
+{% extends 'base.html' %}
+
+{% block title %}Asignar Documentos{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-7">
+
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h3 class="fw-bold mb-0">
+                <i class="bi bi-pencil-square text-warning"></i>
+                Documentos de {{ cliente.get_full_name|default:cliente.username }}
+            </h3>
+            <a href="{% url 'documents:lista_clientes_documentos' %}"
+               class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-arrow-left"></i> Volver
+            </a>
+        </div>
+
+        <div class="card shadow-sm">
+            <div class="card-header bg-white">
+                <small class="text-muted">
+                    <i class="bi bi-info-circle"></i>
+                    Selecciona uno o más documentos requeridos para este cliente.
+                    Si no seleccionas ninguno, se usarán los documentos globales obligatorios.
+                </small>
+            </div>
+            <div class="card-body p-4">
+                <form method="post" novalidate>
+                    {% csrf_token %}
+
+                    <div class="mb-4">
+                        <!-- Botones de selección rápida -->
+                        <div class="d-flex gap-2 mb-3">
+                            <button type="button"
+                                    class="btn btn-outline-secondary btn-sm"
+                                    onclick="marcarTodos(true)">
+                                <i class="bi bi-check-all"></i> Seleccionar todos
+                            </button>
+                            <button type="button"
+                                    class="btn btn-outline-secondary btn-sm"
+                                    onclick="marcarTodos(false)">
+                                <i class="bi bi-x"></i> Deseleccionar todos
+                            </button>
+                        </div>
+
+                        <!-- Lista de tipos de documentos con checkbox -->
+                        {% for tipo in todos_los_tipos %}
+                        <div class="form-check border rounded p-3 mb-2
+                            {% if tipo.id in asignados_ids %}bg-warning bg-opacity-10 border-warning{% endif %}">
+                            <input class="form-check-input documento-check"
+                                   type="checkbox"
+                                   name="tipos_documentos"
+                                   value="{{ tipo.id }}"
+                                   id="tipo_{{ tipo.id }}"
+                                   {% if tipo.id in asignados_ids %}checked{% endif %}>
+                            <label class="form-check-label w-100" for="tipo_{{ tipo.id }}">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <span class="fw-semibold">{{ tipo.nombre }}</span>
+                                        {% if tipo.descripcion %}
+                                            <br>
+                                            <small class="text-muted">{{ tipo.descripcion }}</small>
+                                        {% endif %}
+                                    </div>
+                                    <div class="d-flex gap-1 ms-2">
+                                        {% if tipo.obligatorio %}
+                                            <span class="badge bg-danger">Obligatorio</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">Opcional</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </label>
+                        </div>
+                        {% empty %}
+                        <div class="text-center text-muted py-3">
+                            No hay tipos de documentos activos.
+                            <a href="{% url 'documents:crear_tipo' %}">Crear uno</a>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <!-- Contador de seleccionados -->
+                    <div class="alert alert-info py-2 mb-3">
+                        <small>
+                            <i class="bi bi-check-circle"></i>
+                            <span id="contador">{{ asignados_ids|length }}</span>
+                            documento(s) seleccionado(s)
+                        </small>
+                    </div>
+
+                    <button type="submit" class="btn btn-warning fw-semibold w-100">
+                        <i class="bi bi-save"></i> Guardar asignación
+                    </button>
+                </form>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function marcarTodos(marcar) {
+        document.querySelectorAll('.documento-check').forEach(cb => {
+            cb.checked = marcar;
+        });
+        actualizarContador();
+    }
+
+    function actualizarContador() {
+        const total = document.querySelectorAll('.documento-check:checked').length;
+        document.getElementById('contador').textContent = total;
+    }
+
+    document.querySelectorAll('.documento-check').forEach(cb => {
+        cb.addEventListener('change', actualizarContador);
+    });
+</script>
+{% endblock %}

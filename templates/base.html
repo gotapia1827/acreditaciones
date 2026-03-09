@@ -16,22 +16,117 @@
             <a class="navbar-brand fw-bold" href="{% url 'dashboard:inicio' %}">
                 <i class="bi bi-shield-check"></i> Acreditaciones Mineras
             </a>
-            <div class="navbar-nav ms-auto align-items-center">
-                <span class="navbar-text text-white me-3">
-                    <i class="bi bi-person-circle"></i>
-                    {{ user.get_full_name|default:user.username }}
-                    {% if not user.is_superuser %}
-                        <span class="badge bg-secondary ms-1">
-                            {{ user.profile.get_rol_display }}
-                        </span>
-                    {% endif %}
-                </span>
-                <form method="post" action="{% url 'accounts:logout' %}" class="d-inline">
-                    {% csrf_token %}
-                    <button type="submit" class="btn btn-outline-light btn-sm">
-                        <i class="bi bi-box-arrow-right"></i> Salir
-                    </button>
-                </form>
+
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#navbarMain">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarMain">
+
+                <!-- Menú según rol -->
+                {% if user.is_superuser or user.profile.rol == 'administrador' %}
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.path == '/dashboard/admin/' %}active{% endif %}"
+                        href="{% url 'dashboard:admin' %}">
+                            <i class="bi bi-speedometer2"></i> Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
+                            <i class="bi bi-people"></i> Usuarios
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li>
+                                <a class="dropdown-item" href="{% url 'dashboard:lista_usuarios' %}">
+                                    <i class="bi bi-list-ul"></i> Ver todos
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{% url 'dashboard:crear_usuario' %}">
+                                    <i class="bi bi-person-plus"></i> Crear usuario
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
+                            <i class="bi bi-folder2"></i> Documentos
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li>
+                                <a class="dropdown-item" href="{% url 'documents:lista_tipos' %}">
+                                    <i class="bi bi-card-list"></i> Tipos de documentos
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{% url 'documents:lista_clientes_documentos' %}">
+                                    <i class="bi bi-person-lines-fill"></i> Docs por cliente
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if '/evaluations/' in request.path %}active{% endif %}"
+                        href="{% url 'evaluations:cola_documentos' %}">
+                            <i class="bi bi-inbox"></i> Revisiones
+                        </a>
+                    </li>
+                </ul>
+
+                {% elif user.profile.rol == 'evaluador' %}
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link {% if '/evaluations/' in request.path %}active{% endif %}"
+                        href="{% url 'evaluations:cola_documentos' %}">
+                            <i class="bi bi-inbox"></i> Cola de revisión
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if '/evaluations/historial/' in request.path %}active{% endif %}"
+                        href="{% url 'evaluations:historial' %}">
+                            <i class="bi bi-clock-history"></i> Mi historial
+                        </a>
+                    </li>
+                </ul>
+
+                {% elif user.profile.rol == 'cliente' %}
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link {% if '/documents/mis-documentos/' in request.path %}active{% endif %}"
+                        href="{% url 'documents:mis_documentos' %}">
+                            <i class="bi bi-folder2-open"></i> Mis documentos
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if '/documents/subir/' in request.path %}active{% endif %}"
+                        href="{% url 'documents:subir_documento' %}">
+                            <i class="bi bi-upload"></i> Subir documento
+                        </a>
+                    </li>
+                </ul>
+                {% endif %}
+
+                <!-- Usuario y logout -->
+                <div class="navbar-nav ms-auto align-items-center">
+                    <span class="navbar-text text-white me-3">
+                        <i class="bi bi-person-circle"></i>
+                        {{ user.get_full_name|default:user.username }}
+                        {% if not user.is_superuser %}
+                            <span class="badge bg-secondary ms-1">
+                                {{ user.profile.get_rol_display }}
+                            </span>
+                        {% endif %}
+                    </span>
+                    <form method="post" action="{% url 'accounts:logout' %}" class="d-inline">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-outline-light btn-sm">
+                            <i class="bi bi-box-arrow-right"></i> Salir
+                        </button>
+                    </form>
+                </div>
+
             </div>
         </div>
     </nav>

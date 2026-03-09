@@ -14,7 +14,6 @@
     </a>
 </div>
 
-
 <!-- Barra de cumplimiento -->
 <div class="card shadow-sm mb-4">
     <div class="card-body">
@@ -33,12 +32,11 @@
                 {% elif cumplimiento >= 50 %}bg-warning
                 {% else %}bg-danger{% endif %}"
                 role="progressbar"
-                style="width: {{ cumplimiento }}%">
+                data-width="{{ cumplimiento }}">
             </div>
         </div>
     </div>
 </div>
-
 
 <!-- Tabla de documentos requeridos -->
 <div class="card shadow-sm">
@@ -99,7 +97,9 @@
                             {% if doc %}
                                 {% with ultima=doc.evaluaciones.first %}
                                     {% if ultima and ultima.observacion %}
-                                        <small class="text-muted">{{ ultima.observacion|truncatechars:60 }}</small>
+                                        <small class="text-muted">
+                                            {{ ultima.observacion|truncatechars:60 }}
+                                        </small>
                                     {% else %}
                                         <small class="text-muted">—</small>
                                     {% endif %}
@@ -109,24 +109,26 @@
                             {% endif %}
                         </td>
                         <td class="text-center">
-                            {% if doc %}
-                                <a href="{% url 'documents:detalle_documento' doc.pk %}"
-                                   class="btn btn-outline-secondary btn-sm">
-                                    <i class="bi bi-eye"></i>
+                            <div class="d-flex gap-1 justify-content-center">
+                                {% if doc %}
+                                    <a href="{% url 'documents:detalle_documento' doc.pk %}"
+                                       class="btn btn-outline-secondary btn-sm">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                {% endif %}
+                                <a href="{% url 'documents:subir_documento_tipo' tipo.id %}"
+                                   class="btn btn-outline-warning btn-sm">
+                                    <i class="bi bi-upload"></i>
+                                    {% if doc %}Reemplazar{% else %}Subir{% endif %}
                                 </a>
-                            {% endif %}
-                            <a href="{% url 'documents:subir_documento' %}"
-                               class="btn btn-outline-warning btn-sm">
-                                <i class="bi bi-upload"></i>
-                                {% if doc %}Reemplazar{% else %}Subir{% endif %}
-                            </a>
+                            </div>
                         </td>
                     </tr>
                     {% endwith %}
                 {% empty %}
                     <tr>
                         <td colspan="5" class="text-center text-muted py-4">
-                            No hay tipos de documentos configurados aún.
+                            No hay documentos requeridos asignados aún.
                         </td>
                     </tr>
                 {% endfor %}
@@ -135,4 +137,12 @@
     </div>
 </div>
 
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.querySelectorAll('.progress-bar[data-width]').forEach(bar => {
+        bar.style.width = bar.dataset.width + '%';
+    });
+</script>
 {% endblock %}

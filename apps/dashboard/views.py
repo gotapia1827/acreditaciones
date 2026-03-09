@@ -46,7 +46,7 @@ class AdminDashboardView(AdministradorRequeridoMixin, View):
     template_name = 'dashboard/admin.html'
 
     def get(self, request):
-        # KPIs globales
+        # KPIs globales — excluir administradores del conteo de clientes
         total_clientes = UserProfile.objects.filter(rol='cliente', activo=True).count()
         total_documentos = Documento.objects.filter(esta_vigente=True).count()
         total_aprobados = Documento.objects.filter(esta_vigente=True, estado='aprobado').count()
@@ -54,7 +54,7 @@ class AdminDashboardView(AdministradorRequeridoMixin, View):
         total_pendientes = Documento.objects.filter(esta_vigente=True, estado='pendiente').count()
         total_tipos = TipoDocumento.objects.filter(activo=True, obligatorio=True).count()
 
-        # Tabla de clientes con cumplimiento
+        # Solo clientes reales, nunca administradores ni evaluadores
         clientes = UserProfile.objects.filter(
             rol='cliente',
             activo=True
@@ -89,7 +89,6 @@ class AdminDashboardView(AdministradorRequeridoMixin, View):
             'total_pendientes': total_pendientes,
             'clientes_data': clientes_data,
         })
-
 
 class DetalleClienteAdminView(AdministradorRequeridoMixin, View):
     """Vista detalle de un cliente con todos sus documentos."""

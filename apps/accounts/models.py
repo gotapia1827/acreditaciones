@@ -1,13 +1,10 @@
 from django.db import models
 from django.contrib.auth.models import User
 from apps.core.models import TimeStampedModel
+from apps.accounts.validators import validar_rut_chileno
 
 
 class UserProfile(TimeStampedModel):
-    """
-    Extiende el User de Django con datos adicionales del cliente o evaluador.
-    Relación OneToOne: cada User tiene exactamente un UserProfile.
-    """
 
     ROL_CHOICES = [
         ('cliente', 'Cliente'),
@@ -25,24 +22,16 @@ class UserProfile(TimeStampedModel):
         choices=ROL_CHOICES,
         default='cliente'
     )
-    empresa = models.CharField(
-        max_length=200,
-        blank=True,
-        null=True,
-        help_text='Nombre de la empresa del cliente'
-    )
+    empresa = models.CharField(max_length=200, blank=True, null=True)
     rut = models.CharField(
         max_length=12,
         blank=True,
         null=True,
         unique=True,
-        help_text='RUT de la empresa o persona'
+        validators=[validar_rut_chileno],
+        help_text='Formato: 12345678-9'
     )
-    telefono = models.CharField(
-        max_length=20,
-        blank=True,
-        null=True
-    )
+    telefono = models.CharField(max_length=20, blank=True, null=True)
     activo = models.BooleanField(default=True)
 
     class Meta:
