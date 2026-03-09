@@ -60,3 +60,38 @@ class UserProfile(TimeStampedModel):
 
     def es_administrador(self):
         return self.rol == 'administrador'
+
+class LoginAttempt(models.Model):
+    """
+    Registra intentos fallidos de login por IP.
+    Bloquea temporalmente si supera el límite.
+    """
+    ip_address = models.GenericIPAddressField()
+    username = models.CharField(max_length=150, blank=True)
+    fecha = models.DateTimeField(auto_now_add=True)
+    exitoso = models.BooleanField(default=False)
+
+    class Meta:
+        verbose_name = 'Intento de login'
+        verbose_name_plural = 'Intentos de login'
+        ordering = ['-fecha']
+
+    def __str__(self):
+        return f'{self.ip_address} — {self.username} — {"OK" if self.exitoso else "FAIL"}'
+
+    @classmethod
+    def intentos_fallidos_recientes(cls, ip, minutos=15):
+        """Cuenta intentos fallidos en los últimos N minutos."""
+        from django.utils import timezone
+        from datetime import timedelta
+        desde = timezone.now() - timedelta(minutes=minutos)
+        return cls.objects.filter(
+            ip_address=ip,
+            exitoso=False,
+            fecha__gte=desde
+        ).count()
+
+    @classmethod
+    def esta_bloqueado(cls, ip, max_intentos=5, minutos=15):
+        """Retorna True si la IP está bloqueada."""
+        return cls.intentos_fallidos_recientes(ip, minutos) >= max_intentos

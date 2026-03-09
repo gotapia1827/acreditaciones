@@ -64,9 +64,9 @@
 
                 <!-- Botón descargar archivo -->
                 <div class="mt-3">
-                    <a href="{{ documento.archivo.url }}"
-                       target="_blank"
-                       class="btn btn-outline-primary btn-sm">
+                    <a  href="{% url 'documents:descargar_documento' documento.pk %}"
+                        target="_blank"
+                        class="btn btn-outline-primary btn-sm">
                         <i class="bi bi-download"></i> Ver / Descargar archivo
                     </a>
                 </div>

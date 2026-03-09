@@ -6,6 +6,9 @@ from django.views import View
 from apps.accounts.mixins import ClienteRequeridoMixin
 from .models import Documento, TipoDocumento
 from .forms import DocumentoUploadForm
+import os
+from django.http import FileResponse, Http404
+from django.contrib.auth.decorators import login_required
 
 
 class SubirDocumentoView(ClienteRequeridoMixin, View):
@@ -99,3 +102,31 @@ class DetalleDocumentoView(ClienteRequeridoMixin, View):
             'documento': documento,
             'evaluaciones': evaluaciones,
         })
+
+@login_required
+def descargar_documento(request, pk):
+    """
+    Sirve el archivo solo si el usuario tiene permiso de verlo.
+    - Cliente: solo sus propios documentos
+    - Evaluador/Admin: cualquier documento
+    """
+    documento = get_object_or_404(Documento, pk=pk)
+
+    # Verificar permiso
+    try:
+        rol = request.user.profile.rol
+    except Exception:
+        raise Http404
+
+    if rol == 'cliente' and documento.cliente != request.user:
+        raise Http404
+
+    # Verificar que el archivo existe
+    if not documento.archivo or not os.path.exists(documento.archivo.path):
+        raise Http404
+
+    return FileResponse(
+        open(documento.archivo.path, 'rb'),
+        as_attachment=False,
+        filename=documento.nombre_original
+    )
