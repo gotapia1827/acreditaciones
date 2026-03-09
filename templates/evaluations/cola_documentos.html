@@ -1,0 +1,126 @@
+{% extends 'base.html' %}
+
+{% block title %}Cola de Revisión{% endblock %}
+
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3 class="fw-bold mb-0">
+        <i class="bi bi-inbox text-warning"></i> Cola de Revisión
+        {% if total_pendientes > 0 %}
+            <span class="badge bg-danger ms-2">{{ total_pendientes }}</span>
+        {% endif %}
+    </h3>
+    <a href="{% url 'evaluations:historial' %}" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-clock-history"></i> Mi historial
+    </a>
+</div>
+
+<!-- Documentos pendientes -->
+<div class="card shadow-sm mb-4">
+    <div class="card-header bg-white fw-semibold">
+        <i class="bi bi-clock text-warning"></i> Pendientes de revisión
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Cliente</th>
+                    <th>Empresa</th>
+                    <th>Documento</th>
+                    <th>Fecha subida</th>
+                    <th class="text-center">Acción</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for doc in documentos_pendientes %}
+                <tr>
+                    <td>
+                        <span class="fw-semibold">
+                            {{ doc.cliente.get_full_name|default:doc.cliente.username }}
+                        </span>
+                    </td>
+                    <td>
+                        <small class="text-muted">
+                            {{ doc.cliente.profile.empresa|default:"—" }}
+                        </small>
+                    </td>
+                    <td>{{ doc.tipo_documento.nombre }}</td>
+                    <td>
+                        <small>{{ doc.fecha_subida|date:"d/m/Y H:i" }}</small>
+                    </td>
+                    <td class="text-center">
+                        <a href="{% url 'evaluations:revisar_documento' doc.pk %}"
+                           class="btn btn-warning btn-sm fw-semibold">
+                            <i class="bi bi-search"></i> Revisar
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" class="text-center text-muted py-4">
+                        <i class="bi bi-check-circle text-success fs-4"></i><br>
+                        No hay documentos pendientes de revisión.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Documentos revisados recientemente -->
+<div class="card shadow-sm">
+    <div class="card-header bg-white fw-semibold">
+        <i class="bi bi-check2-circle text-secondary"></i> Revisados recientemente
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Cliente</th>
+                    <th>Documento</th>
+                    <th>Estado</th>
+                    <th>Fecha revisión</th>
+                    <th class="text-center">Detalle</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for doc in documentos_revisados %}
+                <tr>
+                    <td>{{ doc.cliente.get_full_name|default:doc.cliente.username }}</td>
+                    <td>{{ doc.tipo_documento.nombre }}</td>
+                    <td>
+                        {% if doc.estado == 'aprobado' %}
+                            <span class="badge bg-success">
+                                <i class="bi bi-check-circle"></i> Aprobado
+                            </span>
+                        {% else %}
+                            <span class="badge bg-danger">
+                                <i class="bi bi-x-circle"></i> Rechazado
+                            </span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <small>{{ doc.updated_at|date:"d/m/Y H:i" }}</small>
+                    </td>
+                    <td class="text-center">
+                        <a href="{% url 'evaluations:revisar_documento' doc.pk %}"
+                           class="btn btn-outline-secondary btn-sm">
+                            <i class="bi bi-eye"></i>
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" class="text-center text-muted py-4">
+                        No hay documentos revisados aún.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock %}
