@@ -1,0 +1,151 @@
+{% extends 'base.html' %}
+{% load document_tags %}
+
+{% block title %}Detalle Cliente{% endblock %}
+
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3 class="fw-bold mb-0">
+        <i class="bi bi-person text-warning"></i>
+        {{ cliente.get_full_name|default:cliente.username }}
+    </h3>
+    <a href="{% url 'dashboard:admin' %}" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left"></i> Volver
+    </a>
+</div>
+
+<!-- Info cliente -->
+<div class="row g-3 mb-4">
+    <div class="col-md-8">
+        <div class="card shadow-sm h-100">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p class="mb-1">
+                            <span class="text-muted small">Empresa</span><br>
+                            <strong>{{ perfil.empresa|default:"—" }}</strong>
+                        </p>
+                        <p class="mb-1">
+                            <span class="text-muted small">RUT</span><br>
+                            <strong>{{ perfil.rut|default:"—" }}</strong>
+                        </p>
+                    </div>
+                    <div class="col-md-6">
+                        <p class="mb-1">
+                            <span class="text-muted small">Email</span><br>
+                            <strong>{{ cliente.email|default:"—" }}</strong>
+                        </p>
+                        <p class="mb-1">
+                            <span class="text-muted small">Teléfono</span><br>
+                            <strong>{{ perfil.telefono|default:"—" }}</strong>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card shadow-sm h-100">
+            <div class="card-body text-center">
+                <div class="fs-1 fw-bold
+                    {% if cumplimiento == 100 %}text-success
+                    {% elif cumplimiento >= 50 %}text-warning
+                    {% else %}text-danger{% endif %}">
+                    {{ cumplimiento }}%
+                </div>
+                <div class="text-muted small">Cumplimiento</div>
+                <div class="progress mt-2" style="height: 8px;">
+                    <div class="progress-bar
+                        {% if cumplimiento == 100 %}bg-success
+                        {% elif cumplimiento >= 50 %}bg-warning
+                        {% else %}bg-danger{% endif %}"
+                        role="progressbar"
+                        data-width="{{ cumplimiento }}">
+                    </div>
+                </div>
+                <small class="text-muted mt-1 d-block">
+                    {{ aprobados }} de {{ total_tipos }} documentos aprobados
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Documentos -->
+<div class="card shadow-sm">
+    <div class="card-header bg-white fw-semibold">
+        Documentos requeridos
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Documento</th>
+                    <th>Estado</th>
+                    <th>Fecha subida</th>
+                    <th>Última observación</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for tipo in tipos_requeridos %}
+                    {% with doc=docs_por_tipo|get_item:tipo.id %}
+                    <tr>
+                        <td><span class="fw-semibold">{{ tipo.nombre }}</span></td>
+                        <td>
+                            {% if doc %}
+                                {% if doc.estado == 'aprobado' %}
+                                    <span class="badge bg-success">
+                                        <i class="bi bi-check-circle"></i> Aprobado
+                                    </span>
+                                {% elif doc.estado == 'rechazado' %}
+                                    <span class="badge bg-danger">
+                                        <i class="bi bi-x-circle"></i> Rechazado
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-warning text-dark">
+                                        <i class="bi bi-clock"></i> Pendiente
+                                    </span>
+                                {% endif %}
+                            {% else %}
+                                <span class="badge bg-secondary">Sin subir</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if doc %}
+                                <small>{{ doc.fecha_subida|date:"d/m/Y H:i" }}</small>
+                            {% else %}
+                                <small class="text-muted">—</small>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if doc %}
+                                {% with ultima=doc.evaluaciones.first %}
+                                    {% if ultima and ultima.observacion %}
+                                        <small class="text-muted">
+                                            {{ ultima.observacion|truncatechars:80 }}
+                                        </small>
+                                    {% else %}
+                                        <small class="text-muted">—</small>
+                                    {% endif %}
+                                {% endwith %}
+                            {% else %}
+                                <small class="text-muted">—</small>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endwith %}
+                {% empty %}
+                <tr>
+                    <td colspan="4" class="text-center text-muted py-4">
+                        No hay tipos de documentos configurados.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock %}
+```
