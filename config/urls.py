@@ -22,7 +22,10 @@ from django.views.generic import RedirectView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', RedirectView.as_view(url='/admin/', permanent=False)),  # temporal
+    path('accounts/', include('apps.accounts.urls')),
+    path('dashboard/', include('apps.dashboard.urls')),
+    path('documents/', include('apps.documents.urls')),
+    path('', RedirectView.as_view(url='/accounts/login/', permanent=False)),
 ]
 
 if settings.DEBUG:
@@ -32,3 +35,4 @@ if settings.DEBUG:
     ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+

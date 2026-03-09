@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+
+{% block title %}Iniciar Sesión{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center mt-5">
+    <div class="col-md-4">
+        <div class="card shadow-sm">
+            <div class="card-body p-4">
+
+                <div class="text-center mb-4">
+                    <i class="bi bi-shield-check text-warning" style="font-size: 3rem;"></i>
+                    <h4 class="mt-2 fw-bold">Acreditaciones Mineras</h4>
+                    <p class="text-muted small">Ingresa con tus credenciales</p>
+                </div>
+
+                <form method="post" novalidate>
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Usuario</label>
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="bi bi-person"></i>
+                            </span>
+                            <input
+                                type="text"
+                                name="username"
+                                class="form-control"
+                                placeholder="Nombre de usuario"
+                                autofocus
+                                required
+                            >
+                        </div>
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold">Contraseña</label>
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="bi bi-lock"></i>
+                            </span>
+                            <input
+                                type="password"
+                                name="password"
+                                class="form-control"
+                                placeholder="Contraseña"
+                                required
+                            >
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-warning w-100 fw-semibold">
+                        <i class="bi bi-box-arrow-in-right"></i> Ingresar
+                    </button>
+                </form>
+
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

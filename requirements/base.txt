@@ -1,7 +1,5 @@
-Django>=5.0
+Django>=5.0,<6.0
 psycopg2-binary>=2.9
-python-magic>=0.4.27
-python-dotenv>=1.0
+python-decouple>=3.8
+filetype>=1.2
 Pillow>=10.0
-django-storages>=1.14
-boto3>=1.34

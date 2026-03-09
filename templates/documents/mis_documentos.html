@@ -1,0 +1,138 @@
+{% extends 'base.html' %}
+{% load document_tags %}
+
+{% block title %}Mis Documentos{% endblock %}
+
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3 class="fw-bold mb-0">
+        <i class="bi bi-folder2-open text-warning"></i> Mis Documentos
+    </h3>
+    <a href="{% url 'documents:subir_documento' %}" class="btn btn-warning fw-semibold">
+        <i class="bi bi-upload"></i> Subir documento
+    </a>
+</div>
+
+
+<!-- Barra de cumplimiento -->
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <div class="d-flex justify-content-between mb-1">
+            <span class="fw-semibold">Cumplimiento general</span>
+            <span class="fw-bold
+                {% if cumplimiento == 100 %}text-success
+                {% elif cumplimiento >= 50 %}text-warning
+                {% else %}text-danger{% endif %}">
+                {{ cumplimiento }}%
+            </span>
+        </div>
+        <div class="progress" style="height: 12px;">
+            <div class="progress-bar
+                {% if cumplimiento == 100 %}bg-success
+                {% elif cumplimiento >= 50 %}bg-warning
+                {% else %}bg-danger{% endif %}"
+                role="progressbar"
+                style="width: {{ cumplimiento }}%">
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- Tabla de documentos requeridos -->
+<div class="card shadow-sm">
+    <div class="card-header bg-white fw-semibold">
+        Documentos requeridos
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Documento</th>
+                    <th>Estado</th>
+                    <th>Fecha subida</th>
+                    <th>Observación</th>
+                    <th class="text-center">Acción</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for tipo in tipos_requeridos %}
+                    {% with doc=docs_por_tipo|get_item:tipo.id %}
+                    <tr>
+                        <td>
+                            <span class="fw-semibold">{{ tipo.nombre }}</span>
+                            {% if tipo.descripcion %}
+                                <br>
+                                <small class="text-muted">{{ tipo.descripcion }}</small>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if doc %}
+                                {% if doc.estado == 'aprobado' %}
+                                    <span class="badge bg-success">
+                                        <i class="bi bi-check-circle"></i> Aprobado
+                                    </span>
+                                {% elif doc.estado == 'rechazado' %}
+                                    <span class="badge bg-danger">
+                                        <i class="bi bi-x-circle"></i> Rechazado
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-warning text-dark">
+                                        <i class="bi bi-clock"></i> Pendiente
+                                    </span>
+                                {% endif %}
+                            {% else %}
+                                <span class="badge bg-secondary">
+                                    <i class="bi bi-dash-circle"></i> Sin subir
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if doc %}
+                                <small>{{ doc.fecha_subida|date:"d/m/Y H:i" }}</small>
+                            {% else %}
+                                <small class="text-muted">—</small>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if doc %}
+                                {% with ultima=doc.evaluaciones.first %}
+                                    {% if ultima and ultima.observacion %}
+                                        <small class="text-muted">{{ ultima.observacion|truncatechars:60 }}</small>
+                                    {% else %}
+                                        <small class="text-muted">—</small>
+                                    {% endif %}
+                                {% endwith %}
+                            {% else %}
+                                <small class="text-muted">—</small>
+                            {% endif %}
+                        </td>
+                        <td class="text-center">
+                            {% if doc %}
+                                <a href="{% url 'documents:detalle_documento' doc.pk %}"
+                                   class="btn btn-outline-secondary btn-sm">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                            {% endif %}
+                            <a href="{% url 'documents:subir_documento' %}"
+                               class="btn btn-outline-warning btn-sm">
+                                <i class="bi bi-upload"></i>
+                                {% if doc %}Reemplazar{% else %}Subir{% endif %}
+                            </a>
+                        </td>
+                    </tr>
+                    {% endwith %}
+                {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center text-muted py-4">
+                            No hay tipos de documentos configurados aún.
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock %}
