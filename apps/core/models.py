@@ -1,3 +1,13 @@
 from django.db import models
 
-# Create your models here.
+
+class TimeStampedModel(models.Model):
+    """
+    Modelo abstracto base.
+    Agrega created_at y updated_at automáticamente a todos los modelos que hereden de él.
+    """
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        abstract = True
