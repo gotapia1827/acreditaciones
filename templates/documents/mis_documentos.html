@@ -50,6 +50,7 @@
                     <th>Documento</th>
                     <th>Estado</th>
                     <th>Fecha subida</th>
+                    <th>Vencimiento</th>
                     <th>Observación</th>
                     <th class="text-center">Acción</th>
                 </tr>
@@ -104,6 +105,29 @@
                                         <small class="text-muted">—</small>
                                     {% endif %}
                                 {% endwith %}
+                            {% else %}
+                                <small class="text-muted">—</small>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if doc %}
+                                {% if doc.fecha_vencimiento %}
+                                    {% if doc.esta_vencido %}
+                                        <span class="badge bg-danger">
+                                            <i class="bi bi-exclamation-circle"></i>
+                                            Vencido {{ doc.fecha_vencimiento|date:"d/m/Y" }}
+                                        </span>
+                                    {% elif doc.vence_pronto %}
+                                        <span class="badge bg-warning text-dark">
+                                            <i class="bi bi-clock"></i>
+                                            {{ doc.fecha_vencimiento|date:"d/m/Y" }}
+                                        </span>
+                                    {% else %}
+                                        <small>{{ doc.fecha_vencimiento|date:"d/m/Y" }}</small>
+                                    {% endif %}
+                                {% else %}
+                                    <small class="text-muted">Sin vencimiento</small>
+                                {% endif %}
                             {% else %}
                                 <small class="text-muted">—</small>
                             {% endif %}

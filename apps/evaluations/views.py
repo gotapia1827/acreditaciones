@@ -1,14 +1,13 @@
+from django.db import models
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
+from django.core.paginator import Paginator
 from django.views import View
 from apps.accounts.mixins import EvaluadorOAdminMixin
 from apps.documents.models import Documento, TipoDocumento
+from apps.documents.notifications import notificar_documento_evaluado
 from .models import Evaluacion
 from .forms import EvaluacionForm
-from django.db import models
-from django.core.paginator import Paginator
-
-
 
 
 class ColaDocumentosView(EvaluadorOAdminMixin, View):
@@ -55,13 +54,11 @@ class ColaDocumentosView(EvaluadorOAdminMixin, View):
         documentos = documentos.order_by('fecha_subida')
 
         # Paginación
-        from django.core.paginator import Paginator
         paginator = Paginator(documentos, 15)
         page = request.GET.get('page', 1)
         documentos_paginados = paginator.get_page(page)
 
         # Tipos para el filtro
-        from apps.documents.models import TipoDocumento
         tipos = TipoDocumento.objects.filter(activo=True).order_by('nombre')
 
         return render(request, self.template_name, {
@@ -75,7 +72,6 @@ class ColaDocumentosView(EvaluadorOAdminMixin, View):
 
 
 class RevisarDocumentoView(EvaluadorOAdminMixin, View):
-    """Vista para revisar un documento específico."""
     template_name = 'evaluations/revisar_documento.html'
 
     def get(self, request, pk):
@@ -107,7 +103,10 @@ class RevisarDocumentoView(EvaluadorOAdminMixin, View):
 
             # Validar que rechazo tenga observación
             if resultado == Evaluacion.RESULTADO_RECHAZADO and not observacion:
-                messages.error(request, 'Debes agregar una observación al rechazar un documento.')
+                messages.error(
+                    request,
+                    'Debes agregar una observación al rechazar un documento.'
+                )
                 return render(request, self.template_name, {
                     'documento': documento,
                     'form': form,
@@ -115,7 +114,7 @@ class RevisarDocumentoView(EvaluadorOAdminMixin, View):
                 })
 
             # Crear evaluación
-            Evaluacion.objects.create(
+            evaluacion = Evaluacion.objects.create(
                 documento=documento,
                 evaluador=request.user,
                 resultado=resultado,
@@ -125,6 +124,9 @@ class RevisarDocumentoView(EvaluadorOAdminMixin, View):
             # Actualizar estado del documento
             documento.estado = resultado
             documento.save()
+
+            # Enviar notificación al cliente
+            notificar_documento_evaluado(documento, evaluacion)
 
             if resultado == Evaluacion.RESULTADO_APROBADO:
                 messages.success(
@@ -147,6 +149,24 @@ class RevisarDocumentoView(EvaluadorOAdminMixin, View):
 
 
 class HistorialEvaluacionesView(EvaluadorOAdminMixin, View):
+    template_name = 'evaluations/historial.html'
+
+    def get(self, request):
+        evaluaciones = Evaluacion.objects.filter(
+            evaluador=request.user
+        ).select_related(
+            'documento',
+            'documento__cliente',
+            'documento__tipo_documento'
+        ).order_by('-fecha_evaluacion')
+
+        paginator = Paginator(evaluaciones, 20)
+        page = request.GET.get('page', 1)
+        evaluaciones_paginadas = paginator.get_page(page)
+
+        return render(request, self.template_name, {
+            'evaluaciones': evaluaciones_paginadas,
+        })
     """Historial de evaluaciones realizadas por el evaluador."""
     template_name = 'evaluations/historial.html'
 

@@ -44,7 +44,17 @@
                             Tamaño máximo: 25 MB.
                         </div>
                     </div>
-
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold">
+                            Fecha de vencimiento
+                            <span class="text-muted fw-normal small">(opcional)</span>
+                        </label>
+                        {{ form.fecha_vencimiento }}
+                        <div class="form-text">
+                            <i class="bi bi-info-circle"></i>
+                            Ingresa la fecha de vencimiento si el documento expira.
+                        </div>
+                    </div>
                     <button type="submit" class="btn btn-warning fw-semibold w-100">
                         <i class="bi bi-cloud-upload"></i> Subir documento
                     </button>

@@ -14,6 +14,7 @@ from apps.documents.models import Documento, TipoDocumento
 from apps.evaluations.models import Evaluacion
 from .forms import CrearUsuarioForm, EditarUsuarioForm
 from django.db import models
+from .exports import exportar_excel, exportar_pdf
 
 @login_required
 def inicio_view(request):
@@ -229,6 +230,35 @@ class ToggleUsuarioView(AdministradorRequeridoMixin, View):
         messages.success(request, f'Usuario "{usuario.username}" {estado} correctamente.')
         return redirect('dashboard:lista_usuarios')
 
+class ExportarReporteView(AdministradorRequeridoMixin, View):
+    def get(self, request):
+        formato = request.GET.get('formato', 'excel')
+
+        total_tipos = TipoDocumento.objects.filter(activo=True, obligatorio=True).count()
+
+        clientes = UserProfile.objects.filter(
+            rol='cliente',
+            activo=True
+        ).select_related('user').order_by('user__first_name')
+
+        clientes_data = []
+        for perfil in clientes:
+            aprobados = Documento.objects.filter(
+                cliente=perfil.user,
+                esta_vigente=True,
+                estado='aprobado',
+                tipo_documento__obligatorio=True
+            ).count()
+            cumplimiento = round((aprobados / total_tipos) * 100) if total_tipos > 0 else 0
+            clientes_data.append({
+                'perfil': perfil,
+                'aprobados': aprobados,
+                'cumplimiento': cumplimiento,
+            })
+
+        if formato == 'pdf':
+            return exportar_pdf(clientes_data, total_tipos)
+        return exportar_excel(clientes_data, total_tipos)
 
 cliente_view = ClienteDashboardView.as_view()
 evaluador_view = EvaluadorDashboardView.as_view()

@@ -1,8 +1,7 @@
 import os
 from django import forms
-from .models import Documento, TipoDocumento
-from .validators import validar_archivo_completo
 from .models import Documento, TipoDocumento, DocumentoRequerido
+from .validators import validar_archivo_completo
 
 
 class DocumentoUploadForm(forms.ModelForm):
@@ -13,7 +12,7 @@ class DocumentoUploadForm(forms.ModelForm):
 
     class Meta:
         model = Documento
-        fields = ['tipo_documento', 'archivo']
+        fields = ['tipo_documento', 'archivo', 'fecha_vencimiento']
         widgets = {
             'tipo_documento': forms.Select(attrs={
                 'class': 'form-select',
@@ -22,15 +21,19 @@ class DocumentoUploadForm(forms.ModelForm):
                 'class': 'form-control',
                 'accept': '.pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png',
             }),
+            'fecha_vencimiento': forms.DateInput(attrs={
+                'class': 'form-control',
+                'type': 'date',
+            }),
         }
         labels = {
             'tipo_documento': 'Tipo de documento',
             'archivo': 'Archivo',
+            'fecha_vencimiento': 'Fecha de vencimiento (opcional)',
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Solo mostrar tipos de documentos activos
         self.fields['tipo_documento'].queryset = TipoDocumento.objects.filter(
             activo=True
         ).order_by('orden', 'nombre')
@@ -45,10 +48,8 @@ class DocumentoUploadForm(forms.ModelForm):
         documento = super().save(commit=False)
         if cliente:
             documento.cliente = cliente
-        # Guardar nombre original antes del renombrado UUID
         documento.nombre_original = self.cleaned_data['archivo'].name
         if commit:
-            # Marcar documentos anteriores del mismo tipo como no vigentes
             if cliente:
                 Documento.objects.filter(
                     cliente=cliente,
@@ -57,7 +58,8 @@ class DocumentoUploadForm(forms.ModelForm):
                 ).update(esta_vigente=False)
             documento.save()
         return documento
-    
+
+
 class TipoDocumentoForm(forms.ModelForm):
     class Meta:
         model = TipoDocumento

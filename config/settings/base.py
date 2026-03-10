@@ -118,6 +118,10 @@ SECURE_CONTENT_TYPE_NOSNIFF = True
 # Referrer policy
 SECURE_REFERRER_POLICY = 'strict-origin-when-cross-origin'
 
+# Email
+DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='noreply@acreditaciones.cl')
+EMAIL_SUBJECT_PREFIX = '[Acreditaciones Mineras] '
+
 # Logging
 LOGGING = {
     'version': 1,

@@ -3,6 +3,7 @@ import os
 from django.db import models
 from django.contrib.auth.models import User
 from apps.core.models import TimeStampedModel
+from django.utils import timezone
 
 
 def documento_upload_path(instance, filename):
@@ -97,6 +98,11 @@ class Documento(TimeStampedModel):
         default=True,
         help_text='Solo el documento más reciente por tipo estará vigente'
     )
+    fecha_vencimiento = models.DateField(
+    blank=True,
+    null=True,
+    help_text='Fecha de vencimiento del documento. Dejar en blanco si no vence.'
+    )
 
     class Meta:
         verbose_name = 'Documento'
@@ -121,6 +127,25 @@ class Documento(TimeStampedModel):
     @property
     def esta_pendiente(self):
         return self.estado == self.ESTADO_PENDIENTE
+    
+    @property
+    def esta_vencido(self):
+        if self.fecha_vencimiento:
+            return self.fecha_vencimiento < timezone.now().date()
+        return False
+
+    @property
+    def vence_pronto(self):
+        """Retorna True si vence en los próximos 30 días."""
+        if self.fecha_vencimiento:
+            from datetime import timedelta
+            return (
+                timezone.now().date() <=
+                self.fecha_vencimiento <=
+                timezone.now().date() + timedelta(days=30)
+            )
+        return False
+
 class DocumentoRequerido(TimeStampedModel):
     """
     Define qué documentos son requeridos para cada cliente específico.
