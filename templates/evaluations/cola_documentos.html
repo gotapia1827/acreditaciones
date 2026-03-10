@@ -7,20 +7,77 @@
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h3 class="fw-bold mb-0">
         <i class="bi bi-inbox text-warning"></i> Cola de Revisión
-        {% if total_pendientes > 0 %}
-            <span class="badge bg-danger ms-2">{{ total_pendientes }}</span>
-        {% endif %}
+        <span class="badge bg-secondary ms-2">{{ total_resultados }}</span>
     </h3>
     <a href="{% url 'evaluations:historial' %}" class="btn btn-outline-secondary btn-sm">
         <i class="bi bi-clock-history"></i> Mi historial
     </a>
 </div>
 
-<!-- Documentos pendientes -->
+<!-- Filtros -->
 <div class="card shadow-sm mb-4">
-    <div class="card-header bg-white fw-semibold">
-        <i class="bi bi-clock text-warning"></i> Pendientes de revisión
+    <div class="card-body">
+        <form method="get" class="row g-3 align-items-end">
+
+            <div class="col-md-4">
+                <label class="form-label fw-semibold small">Buscar</label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-search"></i></span>
+                    <input type="text"
+                           name="q"
+                           class="form-control"
+                           placeholder="Cliente, empresa, documento..."
+                           value="{{ busqueda }}">
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <label class="form-label fw-semibold small">Estado</label>
+                <select name="estado" class="form-select">
+                    <option value="pendiente" {% if filtro_estado == 'pendiente' %}selected{% endif %}>
+                        Pendientes
+                    </option>
+                    <option value="aprobado" {% if filtro_estado == 'aprobado' %}selected{% endif %}>
+                        Aprobados
+                    </option>
+                    <option value="rechazado" {% if filtro_estado == 'rechazado' %}selected{% endif %}>
+                        Rechazados
+                    </option>
+                    <option value="todos" {% if filtro_estado == 'todos' %}selected{% endif %}>
+                        Todos
+                    </option>
+                </select>
+            </div>
+
+            <div class="col-md-3">
+                <label class="form-label fw-semibold small">Tipo de documento</label>
+                <select name="tipo" class="form-select">
+                    <option value="">Todos los tipos</option>
+                    {% for tipo in tipos %}
+                        <option value="{{ tipo.id }}"
+                                {% if filtro_tipo == tipo.id|stringformat:"s" %}selected{% endif %}>
+                            {{ tipo.nombre }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="col-md-2 d-flex gap-2">
+                <button type="submit" class="btn btn-warning fw-semibold flex-grow-1">
+                    <i class="bi bi-filter"></i> Filtrar
+                </button>
+                <a href="{% url 'evaluations:cola_documentos' %}"
+                   class="btn btn-outline-secondary">
+                    <i class="bi bi-x"></i>
+                </a>
+            </div>
+
+        </form>
     </div>
+</div>
+
+<!-- Tabla de documentos -->
+<div class="card shadow-sm">
     <div class="table-responsive">
         <table class="table table-hover mb-0">
             <thead class="table-light">
@@ -28,12 +85,13 @@
                     <th>Cliente</th>
                     <th>Empresa</th>
                     <th>Documento</th>
+                    <th>Estado</th>
                     <th>Fecha subida</th>
                     <th class="text-center">Acción</th>
                 </tr>
             </thead>
             <tbody>
-                {% for doc in documentos_pendientes %}
+                {% for doc in documentos %}
                 <tr>
                     <td>
                         <span class="fw-semibold">
@@ -47,6 +105,21 @@
                     </td>
                     <td>{{ doc.tipo_documento.nombre }}</td>
                     <td>
+                        {% if doc.estado == 'aprobado' %}
+                            <span class="badge bg-success">
+                                <i class="bi bi-check-circle"></i> Aprobado
+                            </span>
+                        {% elif doc.estado == 'rechazado' %}
+                            <span class="badge bg-danger">
+                                <i class="bi bi-x-circle"></i> Rechazado
+                            </span>
+                        {% else %}
+                            <span class="badge bg-warning text-dark">
+                                <i class="bi bi-clock"></i> Pendiente
+                            </span>
+                        {% endif %}
+                    </td>
+                    <td>
                         <small>{{ doc.fecha_subida|date:"d/m/Y H:i" }}</small>
                     </td>
                     <td class="text-center">
@@ -58,69 +131,50 @@
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="5" class="text-center text-muted py-4">
+                    <td colspan="6" class="text-center text-muted py-4">
                         <i class="bi bi-check-circle text-success fs-4"></i><br>
-                        No hay documentos pendientes de revisión.
+                        No hay documentos que coincidan con los filtros.
                     </td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
-</div>
 
-<!-- Documentos revisados recientemente -->
-<div class="card shadow-sm">
-    <div class="card-header bg-white fw-semibold">
-        <i class="bi bi-check2-circle text-secondary"></i> Revisados recientemente
-    </div>
-    <div class="table-responsive">
-        <table class="table table-hover mb-0">
-            <thead class="table-light">
-                <tr>
-                    <th>Cliente</th>
-                    <th>Documento</th>
-                    <th>Estado</th>
-                    <th>Fecha revisión</th>
-                    <th class="text-center">Detalle</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for doc in documentos_revisados %}
-                <tr>
-                    <td>{{ doc.cliente.get_full_name|default:doc.cliente.username }}</td>
-                    <td>{{ doc.tipo_documento.nombre }}</td>
-                    <td>
-                        {% if doc.estado == 'aprobado' %}
-                            <span class="badge bg-success">
-                                <i class="bi bi-check-circle"></i> Aprobado
-                            </span>
-                        {% else %}
-                            <span class="badge bg-danger">
-                                <i class="bi bi-x-circle"></i> Rechazado
-                            </span>
-                        {% endif %}
-                    </td>
-                    <td>
-                        <small>{{ doc.updated_at|date:"d/m/Y H:i" }}</small>
-                    </td>
-                    <td class="text-center">
-                        <a href="{% url 'evaluations:revisar_documento' doc.pk %}"
-                           class="btn btn-outline-secondary btn-sm">
-                            <i class="bi bi-eye"></i>
+    <!-- Paginación -->
+    {% if documentos.has_other_pages %}
+    <div class="card-footer bg-white">
+        <nav>
+            <ul class="pagination pagination-sm mb-0 justify-content-center">
+                {% if documentos.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link"
+                           href="?page={{ documentos.previous_page_number }}&q={{ busqueda }}&estado={{ filtro_estado }}&tipo={{ filtro_tipo }}">
+                            <i class="bi bi-chevron-left"></i>
                         </a>
-                    </td>
-                </tr>
-                {% empty %}
-                <tr>
-                    <td colspan="5" class="text-center text-muted py-4">
-                        No hay documentos revisados aún.
-                    </td>
-                </tr>
+                    </li>
+                {% endif %}
+                {% for num in documentos.paginator.page_range %}
+                    <li class="page-item {% if documentos.number == num %}active{% endif %}">
+                        <a class="page-link"
+                           href="?page={{ num }}&q={{ busqueda }}&estado={{ filtro_estado }}&tipo={{ filtro_tipo }}">
+                            {{ num }}
+                        </a>
+                    </li>
                 {% endfor %}
-            </tbody>
-        </table>
+                {% if documentos.has_next %}
+                    <li class="page-item">
+                        <a class="page-link"
+                           href="?page={{ documentos.next_page_number }}&q={{ busqueda }}&estado={{ filtro_estado }}&tipo={{ filtro_tipo }}">
+                            <i class="bi bi-chevron-right"></i>
+                        </a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
     </div>
+    {% endif %}
+
 </div>
 
 {% endblock %}

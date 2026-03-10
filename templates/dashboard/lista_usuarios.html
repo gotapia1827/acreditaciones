@@ -18,6 +18,29 @@
     </div>
 </div>
 
+<!-- Buscador -->
+<div class="card shadow-sm mb-3">
+    <div class="card-body py-2">
+        <form method="get" class="d-flex gap-2">
+            <div class="input-group">
+                <span class="input-group-text"><i class="bi bi-search"></i></span>
+                <input type="text"
+                       name="q"
+                       class="form-control"
+                       placeholder="Buscar por nombre, usuario, email o empresa..."
+                       value="{{ busqueda }}">
+            </div>
+            <button type="submit" class="btn btn-warning">Buscar</button>
+            {% if busqueda %}
+                <a href="{% url 'dashboard:lista_usuarios' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-x"></i>
+                </a>
+            {% endif %}
+        </form>
+    </div>
+</div>
+
+<!-- Tabla -->
 <div class="card shadow-sm">
     <div class="table-responsive">
         <table class="table table-hover mb-0">
@@ -90,13 +113,46 @@
                 {% empty %}
                 <tr>
                     <td colspan="6" class="text-center text-muted py-4">
-                        No hay usuarios registrados.
+                        No hay usuarios que coincidan con la búsqueda.
                     </td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
+
+    <!-- Paginación -->
+    {% if usuarios.has_other_pages %}
+    <div class="card-footer bg-white">
+        <nav>
+            <ul class="pagination pagination-sm mb-0 justify-content-center">
+                {% if usuarios.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link"
+                           href="?page={{ usuarios.previous_page_number }}&q={{ busqueda }}">
+                            <i class="bi bi-chevron-left"></i>
+                        </a>
+                    </li>
+                {% endif %}
+                {% for num in usuarios.paginator.page_range %}
+                    <li class="page-item {% if usuarios.number == num %}active{% endif %}">
+                        <a class="page-link"
+                           href="?page={{ num }}&q={{ busqueda }}">{{ num }}</a>
+                    </li>
+                {% endfor %}
+                {% if usuarios.has_next %}
+                    <li class="page-item">
+                        <a class="page-link"
+                           href="?page={{ usuarios.next_page_number }}&q={{ busqueda }}">
+                            <i class="bi bi-chevron-right"></i>
+                        </a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+    {% endif %}
+
 </div>
 
 {% endblock %}

@@ -2,38 +2,75 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.views import View
 from apps.accounts.mixins import EvaluadorOAdminMixin
-from apps.documents.models import Documento
+from apps.documents.models import Documento, TipoDocumento
 from .models import Evaluacion
 from .forms import EvaluacionForm
+from django.db import models
+from django.core.paginator import Paginator
+
+
 
 
 class ColaDocumentosView(EvaluadorOAdminMixin, View):
-    """Lista de documentos pendientes de revisión."""
     template_name = 'evaluations/cola_documentos.html'
 
     def get(self, request):
-        documentos_pendientes = Documento.objects.filter(
-            esta_vigente=True,
-            estado=Documento.ESTADO_PENDIENTE
-        ).select_related(
-            'cliente',
-            'tipo_documento',
-            'cliente__profile'
-        ).order_by('fecha_subida')
+        # Filtros
+        busqueda = request.GET.get('q', '').strip()
+        filtro_estado = request.GET.get('estado', 'pendiente')
+        filtro_tipo = request.GET.get('tipo', '')
 
-        documentos_revisados = Documento.objects.filter(
-            esta_vigente=True,
-            estado__in=[Documento.ESTADO_APROBADO, Documento.ESTADO_RECHAZADO]
+        # Query base
+        documentos = Documento.objects.filter(
+            esta_vigente=True
         ).select_related(
             'cliente',
             'tipo_documento',
             'cliente__profile'
-        ).order_by('-updated_at')[:20]
+        )
+
+        # Aplicar filtro de estado
+        if filtro_estado == 'pendiente':
+            documentos = documentos.filter(estado=Documento.ESTADO_PENDIENTE)
+        elif filtro_estado == 'aprobado':
+            documentos = documentos.filter(estado=Documento.ESTADO_APROBADO)
+        elif filtro_estado == 'rechazado':
+            documentos = documentos.filter(estado=Documento.ESTADO_RECHAZADO)
+
+        # Aplicar búsqueda
+        if busqueda:
+            documentos = documentos.filter(
+                models.Q(cliente__first_name__icontains=busqueda) |
+                models.Q(cliente__last_name__icontains=busqueda) |
+                models.Q(cliente__username__icontains=busqueda) |
+                models.Q(cliente__profile__empresa__icontains=busqueda) |
+                models.Q(tipo_documento__nombre__icontains=busqueda) |
+                models.Q(nombre_original__icontains=busqueda)
+            )
+
+        # Aplicar filtro de tipo de documento
+        if filtro_tipo:
+            documentos = documentos.filter(tipo_documento_id=filtro_tipo)
+
+        documentos = documentos.order_by('fecha_subida')
+
+        # Paginación
+        from django.core.paginator import Paginator
+        paginator = Paginator(documentos, 15)
+        page = request.GET.get('page', 1)
+        documentos_paginados = paginator.get_page(page)
+
+        # Tipos para el filtro
+        from apps.documents.models import TipoDocumento
+        tipos = TipoDocumento.objects.filter(activo=True).order_by('nombre')
 
         return render(request, self.template_name, {
-            'documentos_pendientes': documentos_pendientes,
-            'documentos_revisados': documentos_revisados,
-            'total_pendientes': documentos_pendientes.count(),
+            'documentos': documentos_paginados,
+            'tipos': tipos,
+            'busqueda': busqueda,
+            'filtro_estado': filtro_estado,
+            'filtro_tipo': filtro_tipo,
+            'total_resultados': documentos_paginados.paginator.count,
         })
 
 

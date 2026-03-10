@@ -13,7 +13,7 @@ from apps.accounts.models import UserProfile
 from apps.documents.models import Documento, TipoDocumento
 from apps.evaluations.models import Evaluacion
 from .forms import CrearUsuarioForm, EditarUsuarioForm
-
+from django.db import models
 
 @login_required
 def inicio_view(request):
@@ -129,15 +129,31 @@ class DetalleClienteAdminView(AdministradorRequeridoMixin, View):
 
 
 class ListaUsuariosView(AdministradorRequeridoMixin, View):
-    """Lista de todos los usuarios del sistema."""
     template_name = 'dashboard/lista_usuarios.html'
 
     def get(self, request):
-        usuarios = UserProfile.objects.select_related('user').order_by('rol', 'user__first_name')
-        return render(request, self.template_name, {
-            'usuarios': usuarios,
-        })
+        from django.core.paginator import Paginator
+        busqueda = request.GET.get('q', '').strip()
 
+        usuarios = UserProfile.objects.select_related('user').order_by('rol', 'user__first_name')
+
+        if busqueda:
+            usuarios = usuarios.filter(
+                models.Q(user__first_name__icontains=busqueda) |
+                models.Q(user__last_name__icontains=busqueda) |
+                models.Q(user__username__icontains=busqueda) |
+                models.Q(user__email__icontains=busqueda) |
+                models.Q(empresa__icontains=busqueda)
+            )
+
+        paginator = Paginator(usuarios, 20)
+        page = request.GET.get('page', 1)
+        usuarios_paginados = paginator.get_page(page)
+
+        return render(request, self.template_name, {
+            'usuarios': usuarios_paginados,
+            'busqueda': busqueda,
+        })
 
 class CrearUsuarioView(AdministradorRequeridoMixin, View):
     """Vista para crear un nuevo usuario desde el panel admin."""

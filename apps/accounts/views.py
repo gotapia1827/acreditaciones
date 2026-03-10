@@ -1,10 +1,10 @@
-from django.contrib.auth import login, logout, authenticate
+from django.contrib.auth import login, logout, authenticate, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
+from apps.accounts.forms import CambiarPasswordForm, EditarPerfilForm
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.views import View
 from .models import LoginAttempt
-
 
 def get_client_ip(request):
     """Obtiene la IP real del cliente."""
@@ -113,3 +113,33 @@ def perfil_view(request):
     return render(request, 'accounts/perfil.html', {
         'perfil': request.user.profile
     })
+@login_required
+def cambiar_password_view(request):
+    if request.method == 'POST':
+        form = CambiarPasswordForm(request.user, request.POST)
+        if form.is_valid():
+            user = form.save()
+            update_session_auth_hash(request, user)
+            messages.success(request, 'Contraseña actualizada correctamente.')
+            return redirect('accounts:perfil')
+        else:
+            messages.error(request, 'Por favor corrige los errores.')
+    else:
+        form = CambiarPasswordForm(request.user)
+    return render(request, 'accounts/cambiar_password.html', {'form': form})
+
+
+@login_required
+def editar_perfil_view(request):
+    perfil = request.user.profile
+    if request.method == 'POST':
+        form = EditarPerfilForm(request.POST, instance=perfil, user=request.user)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Perfil actualizado correctamente.')
+            return redirect('accounts:perfil')
+        else:
+            messages.error(request, 'Por favor corrige los errores.')
+    else:
+        form = EditarPerfilForm(instance=perfil, user=request.user)
+    return render(request, 'accounts/editar_perfil.html', {'form': form})

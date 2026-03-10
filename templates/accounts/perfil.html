@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+
+{% block title %}Mi Perfil{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-7">
+
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h3 class="fw-bold mb-0">
+                <i class="bi bi-person-circle text-warning"></i> Mi Perfil
+            </h3>
+            <div class="d-flex gap-2">
+                <a href="{% url 'accounts:editar_perfil' %}"
+                   class="btn btn-outline-primary btn-sm">
+                    <i class="bi bi-pencil"></i> Editar perfil
+                </a>
+                <a href="{% url 'accounts:cambiar_password' %}"
+                   class="btn btn-outline-secondary btn-sm">
+                    <i class="bi bi-lock"></i> Cambiar contraseña
+                </a>
+            </div>
+        </div>
+
+        <div class="card shadow-sm">
+            <div class="card-body p-4">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <span class="text-muted small">Nombre completo</span>
+                        <p class="fw-semibold mb-0">
+                            {{ user.get_full_name|default:"—" }}
+                        </p>
+                    </div>
+                    <div class="col-md-6">
+                        <span class="text-muted small">Usuario</span>
+                        <p class="fw-semibold mb-0">{{ user.username }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <span class="text-muted small">Email</span>
+                        <p class="fw-semibold mb-0">{{ user.email|default:"—" }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <span class="text-muted small">Rol</span>
+                        <p class="mb-0">
+                            <span class="badge bg-secondary">
+                                {{ perfil.get_rol_display }}
+                            </span>
+                        </p>
+                    </div>
+                    <div class="col-md-6">
+                        <span class="text-muted small">Empresa</span>
+                        <p class="fw-semibold mb-0">{{ perfil.empresa|default:"—" }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <span class="text-muted small">RUT</span>
+                        <p class="fw-semibold mb-0">{{ perfil.rut|default:"—" }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <span class="text-muted small">Teléfono</span>
+                        <p class="fw-semibold mb-0">{{ perfil.telefono|default:"—" }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <span class="text-muted small">Miembro desde</span>
+                        <p class="fw-semibold mb-0">
+                            {{ user.date_joined|date:"d/m/Y" }}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}
